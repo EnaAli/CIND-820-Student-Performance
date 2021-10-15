@@ -1,1 +1,1 @@
-# CIND-820-Student-Performance
+# CIND-820-Predicting-Student-Performance
