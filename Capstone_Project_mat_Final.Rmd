@@ -1,0 +1,196 @@
+
+
+---
+title: "Student Performance prediction-Multiple Linear Regression- Math Dataset"
+Github link: https://github.com/EnaAli/CIND-820-Student-Performance.git
+---
+Link to the dataset: https://archive.ics.uci.edu/ml/datasets/student+performance
+
+student-mat.csv (Math course) 
+
+```{r}
+library(readr)
+library(tidyverse)
+# install.packages('caTools')
+library(caTools)
+# install.packages("Metrics")
+library(Metrics)
+library(performance)
+library(MASS)
+library(psych) 
+```
+
+
+```{r}
+#Math dataset
+mat<- read.table("student-mat.csv", header =TRUE, sep = ";",stringsAsFactors = T)
+```
+O
+```{r}
+#create summary table
+describe(mat.num, interp=FALSE,ranges=F,check=F,quant=c(.25,.75) ,omit=T,data=NULL) #library(psych)
+
+```
+
+
+```{r}
+### Subsetting numeric attributes.
+numeric<- sapply(mat, is.numeric) 
+mat.num<-mat[,numeric]
+##### Normalize the dataset
+normalize <- function(x) {
+return ((x - min(x)) / (max(x) - min(x))) }
+nmat<- as.data.frame(lapply(mat.num[,-c(14,15,16)], normalize))
+nmat<-cbind(nmat,mat.num[,14:16])
+# summary(nmat)
+
+```
+
+```{r}
+
+###linear regression model with numeric attribute  
+###split the data into training and testing 
+set.seed(11)
+sample.mat <- sample(1:nrow(nmat), (nrow(nmat)*.8))
+#Pass the values contained in the sample to training
+mat.train <- nmat[sample.mat,]
+#Pass the remaining of the data to testing
+mat.test <-nmat[-sample.mat,]
+```
+
+
+```{r}
+#### Since G1, G2 and G3 are highly correlated as we see in the corrplot, we are not using G1 and G2 in predicting G3.
+############
+#### train  and test dataset to predict G3 without G1,G2
+mat.train3<-mat.train[,-c(14,15)]
+mat.test3<-mat.test[,-c(14,15)]
+
+#### train  and test dataset to predict G1 without G2,G3
+mat.train1<-mat.train[,-c(15,16)]
+mat.test1<-mat.test[,-c(15,16)]
+```
+
+```{r}
+
+###Apply Forward Selection and Backward Elimination to find the important attributes.
+#### Multiple linear Regression models to predict G3
+Full3<-lm(G3~.,nmat3)
+Null3<-lm(G3~1,nmat3)
+stepF3<- stepAIC(Null3, scope=list(lower=Null3, upper=Full3),direction= "forward", trace=F) ##library(MASS)
+stepB3 <- stepAIC(Full3, direction= "backward", trace=F)                                    
+
+summary(Full3)
+summary(stepF3)
+# summary(stepB3)
+# compare_performance(Full3,stepF3,stepB3) # library(performance)
+
+compare_performance(Full3,Null3,stepF3,stepB3)
+
+### The Forward Selection and Backward Elimination give the same model(lm(formula = G1 ~ Medu + failures + freetime + goout, data = mat.num)) with AIC=2264 compared to 2273 for the full model since the lower value of AIC is better model, the same values were for normalized data.
+```
+```{r}
+#Create a model using the lm function (Multiple Linear Regression Model) using train dataset to predict G3.
+train3 <- lm(G3~.,mat.train3)
+predict3<-round(predict(train3, mat.test3 ),0)
+# rmse(mat.test3$G3, predict.F3)    ###install.packages("Metrics") ,library(Metrics)
+errors3 <- predict3 - mat.test3$G3
+hist(errors3)
+RMSE3 <- sqrt(sum((errors3)^2)/nrow(mat.test3))
+RMSE3 ### 4.39
+```
+
+
+```{r}
+#############################
+trainSF3<-lm(formula = G3 ~ failures + Medu + goout + studytime + freetime, 
+    data = mat.train3)
+predictSF3 <-round(predict(trainSF3, mat.test3,interval="prediction"),0)
+# rmse(mat.test3$G3, predict.SF3)
+errorsSF3 <- predictSF3[,"fit"] - mat.test3$G3
+# hist(errorsSF3)
+rmseSF3 <- sqrt(sum((errorsSF3)^2)/nrow(mat.test3))
+rmseSF3 ###  4.45
+```
+
+
+```{r}
+library(performance)
+compare_performance(train3,trainSF3)  ###library(performance)
+## the performance of the partial model with 5 features only (failures + Medu + goout + studytime + freetime) is almost the same as the full model
+```
+
+
+```{r}
+# Apply Forward Selection and Backward Elimination to find the important attributes.
+#### Multiple linear Regression models to predict G1
+Full1<-lm(G1~.,nmat1)
+Null1<-lm(G1~1,nmat1)
+StepF1<- stepAIC(Null1, scope=list(lower=Null1, upper=Full1),direction= "forward", trace=F) ##library(MASS)
+StepB1 <- stepAIC(Full1, direction= "backward", trace=F)                                    ##library(MASS)
+# 
+# summary(Full1)
+# summary(StepF1)
+
+# compare_performance(Full1,StepF1 ,StepB1) # library(performance)
+compare_performance(Full1,Null1,StepF1 ,StepB1)
+
+### The Forward Selection and Backward Elimination give the same model(lm(formula = G1 ~ Medu + failures + freetime + goout, data = mat.num)) with AIC=2008 compared to 2019 for the full model since the lower value of AIC is better model, the same values were for normalized data.
+```
+
+```{r}
+#Create a model using the lm function (Multiple Linear Regression Model) using full attributes.
+trainF1<-lm(G1~.,mat.train1)
+predictF1<-round(predict(trainF1, mat.test1 ,interval="prediction"),0)
+errorsF1 <- predictF1[,"fit"] - mat.test1$G1
+hist(errorsF1)
+RMSE.F1 <- sqrt(sum((errorsF1)^2)/nrow(mat.test1))
+RMSE.F1 ### 2.85
+# rmse(mat.test1$G1, predict.F1)    ###install.packages("Metrics") ,library(Metrics)
+```
+
+
+```{r}
+###############################
+#Create a model using the lm function (Multiple Linear Regression Model) using 5 attributes.
+trainSF1 <-lm(formula = G1 ~ failures + Medu + goout + studytime + freetime, 
+    data = mat.train1)
+predictSF1 <-round(predict(trainSF1, mat.test1,interval="prediction"),0)
+errorsSF1 <- predictSF1[,"fit"] - mat.test1$G1
+hist(errorsSF1)
+RMSE.SF1 <- sqrt(sum((errorsSF1)^2)/nrow(mat.test1))
+RMSE.SF1 ### 2.90
+# rmse(mat.test1$G1, predict.mat.SF1)
+```
+```{r}
+# K-fold cross-validation
+ library(caret)
+# setting seed to generate a reproducible random sampling
+set.seed(11)
+ 
+# defining training control as cross-validation and value of K equal to 5
+train_control <- trainControl(method = "cv", number = 5)
+ 
+# training the model by assigning G1 as dependent variable and rest column as independent variable
+model1 <- train(G1 ~., data = nmat1, method = "lm", trControl = train_control)
+ 
+# printing model performance metrics
+print(model1)
+model1$resample
+```
+
+```{r}
+# setting seed to generate a reproducible random sampling
+set.seed(11)
+ 
+# defining training control as cross-validation and value of K equal to 5
+train_control <- trainControl(method = "cv", number = 5)
+ 
+# training the model by assigning G1 as dependent variable and rest column as independent variable
+model3 <- train(G3 ~., data = nmat3, method = "lm", trControl = train_control)
+ 
+# printing model performance metrics
+print(model3)
+model3$resample
+```
+
