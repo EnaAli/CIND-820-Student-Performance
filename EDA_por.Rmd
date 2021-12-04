@@ -1,0 +1,153 @@
+---
+title: "EDA Student Performance prediction"
+Github Link: https://github.com/EnaAli/CIND-820-Student-Performance.git
+---
+Link to the dataset: https://archive.ics.uci.edu/ml/datasets/student+performance
+two dataset: student-mat.csv (Math course) and student-por.csv (Portuguese language course) 
+
+```{r}
+library(readr)
+library(tidyverse)
+```
+
+```{r}
+#### Por dataset
+por<- read.table("student-por.csv", header =TRUE, sep = ";", stringsAsFactors = T)
+summary(por)
+str(por)
+
+```
+```{r}
+attribute<-c("School","Sex","Age","Address","Family Size","Parent's Status","Mother Education","Father Education","Mother Job","Father Job" ,"Reason","guardian","Time to Travel to School","Weekly Study Time","Past Class Failures","School Educational Support","Family Educational Support"," Extra Paid Class", "Extra Curricular Activities", "Attended Nursery School","Want to Take Higher Education","Internet Access at Home","With a Romantic Relationship","Quality of Family Relationships","Free Time after School","Going out with Friends ","Workday Alcohol Consumption", "Weekend Alcohol Consumption", "Current Health Status","Number of School Absences ", "First Period Grade",  "Secound Period Grade","Final Grade")
+### Distributions for all Attributes
+
+for( i in 1:33){
+print((ggplot(por,aes(x=por[,i], y = ..count../sum(..count..)*100,fill=factor(por[,i])))+ geom_bar()+xlab(names(por[i]))+xlab(attribute[i]))+ ylab("Pecentage")+labs(subtitle = "Portuguese"))
+}
+
+
+```
+ 
+```{r}
+# Subsetting student who got 0 in g3
+por0<-por[which(por$G3==0),]
+
+#  student who got 0 in G3 Visualization 
+for( i in 1:32){
+print(ggplot(por0,aes(x=factor(por0[,i]), y =(..count../sum(..count..))*100,fill=factor(por0[,i])))+ geom_bar()+xlab(names(por0[i]))+xlab(attribute[i])+ ylab("Pecentage")+labs(subtitle = "Portuguese"))
+}
+#####################################
+# EDA for the group of the students who score zero in the final grade
+####################################
+# GP: there are around 35 students got 0 of 350 10% students in porh where for por  3 students 420 0.7% less than 1%
+# MS: 4 students out of 50 in porh 8% where por 14 students of 230 6%
+########################################
+#more female students got zero in porh when there is almost the same number of students
+#less female students got zero in por even there were more female students in por course than male
+########################################
+# Even the number of students in porh is less than those in por , the failure is higher. and the age in porh is less than por for this group of students.
+#######################################
+#there are students who got zero in the final grade even they got marks between 4 and 12 in the first porh exam and between 4-11 in por ,on the other hand the range of marks in the second exam was between 0 and 10  in porh and  0 and 9 in por. that might indicate that there are other factors than the grades in first and second exams as in first exam the minimum grade was 4  
+#########################################
+# Most of the students in this group didn't have previous failure in porh course where in por the maximum was failing one time.
+#########################################
+#  The health of this group of students was good with few have bad to very bad health.
+#############
+#The students in this group did not have any absences.
+
+
+```
+
+```{r}
+# Subsetting student. removing students who score zero g3 and did not score zero in g1 and g2 as this group might have other factor that make them score zero in g3
+por_sub0<-por[which(por$G3==0 & por$G1!=0 & por$G2!=0),]
+for( i in c(11,15,30, 32)){
+print(ggplot(por_sub0,aes(factor(por_sub0[,i]), y =(..count../sum(..count..))*100,fill=factor(por_sub0[,i])))+ geom_bar()+xlab(names(por_sub0[i]))+xlab(attribute[i])+ ylab("Pecentage")+labs(subtitle = "Portuguese"))
+}
+```
+
+
+```{r}
+# Subsetting student who did not got 0 in g3
+por_not0<-por[which(por$G3 !=0),]
+for( i in 31:33){
+print(ggplot(por_not0,aes(factor(por_not0[,i]), y =(..count../sum(..count..))*100,fill=factor(por_not0[,i])))+ geom_bar()+xlab(names(por_not0[i]))+xlab(attribute[i])+ ylab("Pecentage")+labs(subtitle = "Portuguese"))
+}
+
+### the students distribution for the students who did not score 0 in final grade G3.
+```
+```{r}
+# plotting the attributes vs G3
+for( i in 1:33){
+print(ggplot(por,aes(por[,i],G3))+ geom_count()+xlab(names(por[i]))+xlab(attribute[i])+labs(subtitle = "Portuguese"))
+}
+
+```
+
+
+```{r}
+# plotting the attributes vs G1
+for( i in c(30,32,33)){
+print(ggplot(por,aes(por[,i],G1))+ geom_count()+xlab(names(por[i]))+xlab(attribute[i])+labs(subtitle = "Portuguese"))
+}
+
+```
+
+
+
+
+```{r}
+## The group of students who score between 10-15(EDA)
+## Subsetting student who get 10-15
+por_pass1<-por[which(por$G3==10:15),]
+
+for( i in 30:33){
+print(ggplot(por_pass1,aes(factor(por_pass1[,i]), y =(..count../sum(..count..))*100,fill=factor(por_pass1[,i])))+ geom_bar()+xlab(names(por_pass1[i]))+xlab(attribute[i])+ ylab("Pecentage")+labs(subtitle = "Portuguese"))
+}
+# the score for this group in G1 and G2 were between 7 and 16.
+
+```
+
+```{r}
+# Subsetting student who get 16-18
+por_pass2<-por[which(por$G3==16:18),]
+
+for( i in 31:33){
+print(ggplot(por_pass2,aes(factor(por_pass2[,i]), y =(..count../sum(..count..))*100,fill=factor(por_pass2[,i])))+ geom_bar()+xlab(names(por_pass2[i]))+ ylab("Pecentage")+labs(subtitle = "Portuguese"))
+}
+```
+
+
+```{r}
+# students scored in G1 between 10 to 18 and in G2 10 and 18.
+# Subsetting student who get 19-20
+por_pass3<-por[which(por$G3==19:20),]
+
+for( i in 31:33){
+print(ggplot(por_pass3,aes(factor(por_pass3[,i]), y =(..count../sum(..count..))*100,fill=factor(por_pass3[,i])))+ geom_bar()+xlab(names(por_pass3[i]))+ ylab("Pecentage")+labs(subtitle = "Portuguese"))
+}
+### students scored in G1 16,18,19 and in G2 18,19. maximum absences was 6 
+```
+
+```{r}
+
+for( i in c(3,7,8,13,14,24:30:33)){
+print(ggplot(por,aes(x=por[,i]))+ geom_boxplot()+xlab(attribute[i])+labs(subtitle = "Portuguese"))
+}
+```
+
+```{r fig.height=25, fig.width=50}
+library(corrplot)
+num<-sapply(por, is.numeric)
+numeric<-por[,num]
+cor_numeric<-cor(numeric, method = "pearson")
+corrplot.mixed(cor_numeric,upper ="number",lower="color")   ### library(corrplot)
+### There are high positive correlations between G1, G2 and G3.
+```
+
+```{r}
+por_num<-sapply(por, as.integer)
+cor_por<-cor(por_num, method = "spearman")
+corrplot.mixed(cor_por,upper ="number",lower="color")   ### library(corrplot)
+### There are high positive correlations between G1, G2 and G3.
+```
