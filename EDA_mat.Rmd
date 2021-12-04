@@ -1,0 +1,148 @@
+---
+title: "EDA Student Performance prediction"
+Github Link: https://github.com/EnaAli/CIND-820-Student-Performance.git
+output: word_document
+---
+Link to the dataset: https://archive.ics.uci.edu/ml/datasets/student+performance
+two dataset: student-mat.csv (Math course) and student-por.csv (Portuguese language course) 
+
+```{r}
+library(readr)
+library(tidyverse)
+
+```
+
+```{r}
+#### Math dataset
+mat<- read.table("student-mat.csv", header =TRUE, sep = ";", stringsAsFactors = T)
+summary(mat)
+str(mat)
+por<- read.table("student-por.csv", header =TRUE, sep = ";", stringsAsFactors = T)
+summary(por)
+```
+
+
+```{r}
+attribute<-c("School","Sex","Age","Address","Family Size","Parent's Status","Mother Education","Father Education","Mother Job","Father Job" ,"Reason","guardian","Time to Travel to School","Weekly Study Time","Past Class Failures","School Educational Support","Family Educational Support"," Extra Paid Class", "Extra Curricular Activities", "Attended Nursery School","Want to Take Higher Education","Internet Access at Home","With a Romantic Relationship","Quality of Family Relationships","Free Time after School","Going out with Friends ","Workday Alcohol Consumption", "Weekend Alcohol Consumption", "Current Health Status","Number of School Absences ", "First Period Grade",  "Secound Period Grade","Final Grade")
+### Distributions for all Attributes
+
+for( i in 1:33){
+print((ggplot(mat,aes(x=mat[,i], y = ..count../sum(..count..)*100,fill=factor(mat[,i])))+ geom_bar()+xlab(names(mat[i]))+xlab(attribute[i])+ ylab("Pecentage")+labs(subtitle = "Math")))
+}
+```
+
+
+
+```{r}
+#The G1,G2,G3 distributions show a normal distribution except for students who score zero. these outliers we have to study them and find insights about them and how they will affects our model.
+
+# Subsetting student who got 0 in g3
+mat0<-mat[which(mat$G3==0),]
+
+#  student who got 0 in G3 Visualization 
+for( i in 1:32){
+print(ggplot(mat0,aes(x=factor(mat0[,i]), y =(..count../sum(..count..))*100,fill=factor(mat0[,i])))+ geom_bar()+xlab(names(mat0[i]))+xlab(attribute[i])+ ylab("Pecentage")+labs(subtitle = "Math"))
+}
+
+
+
+```
+
+```{r}
+# Subsetting student. removing students who score zero g3 and did not score zero in g1 and g2 as this group might have other factor that make them score zero in g3
+mat_sub0<-mat[which(mat$G3==0 & mat$G1!=0 & mat$G2!=0),]
+for( i in c(11,15,30, 32)){
+print(ggplot(mat_sub0,aes(factor(mat_sub0[,i]), y =(..count../sum(..count..))*100,fill=factor(mat_sub0[,i])))+ geom_bar()+xlab(names(mat_sub0[i]))+xlab(attribute[i])+ ylab("Pecentage")+labs(subtitle = "Math"))
+}
+```
+
+
+```{r}
+# Subsetting student who did not got 0 in g3
+mat_not0<-mat[which(mat$G3 !=0),]
+for( i in 31:33){
+print(ggplot(mat_not0,aes(factor(mat_not0[,i]), y =(..count../sum(..count..))*100,fill=factor(mat_not0[,i])))+ geom_bar()+xlab(names(mat_not0[i]))+xlab(attribute[i])+ ylab("Pecentage")+labs(subtitle = "Math"))
+}
+
+### the students distribution for the students who did not score 0 in final grade G3.
+```
+```{r}
+
+# plotting the attributes vs G3
+for( i in 1:33){
+print(ggplot(mat,aes(mat[,i],G3))+ geom_count()+xlab(names(mat[i]))+xlab(attribute[i])+labs(subtitle = "Math"))
+}
+
+```
+
+
+```{r}
+# plotting the attributes vs G1
+for( i in c(30,32,33)){
+print(ggplot(mat,aes(mat[,i],G1))+ geom_jitter()+xlab(names(mat[i]))+xlab(attribute[i])+labs(subtitle = "Math"))
+}
+
+```
+
+
+
+
+```{r}
+## The group of students who score between 10-15(EDA)
+## Subsetting student who get 10-15
+mat_pass1<-mat[which(mat$G3==10:15),]
+
+for( i in 30:33){
+print(ggplot(mat_pass1,aes(factor(mat_pass1[,i]), y =(..count../sum(..count..))*100,fill=factor(mat_pass1[,i])))+ geom_bar()+xlab(names(mat_pass1[i]))+xlab(attribute[i])+ ylab("Pecentage")+labs(subtitle = "Math"))
+}
+
+# the score for this group in G1 and G2 were between 7 and 16.
+
+```
+
+```{r}
+
+# Subsetting student who get 16-18
+mat_pass2<-mat[which(mat$G3==16:18),]
+
+for( i in 31:33){
+print(ggplot(mat_pass2,aes(factor(mat_pass2[,i]), y =(..count../sum(..count..))*100,fill=factor(mat_pass2[,i])))+ geom_bar()+xlab(names(mat_pass2[i]))+xlab(attribute[i])+ ylab("Pecentage")+labs(subtitle = "Math"))
+}
+```
+
+
+```{r}
+# students scored in G1 between 10 to 18 and in G2 10 and 18.
+# Subsetting student who get 19-20
+mat_pass3<-mat[which(mat$G3==19:20),]
+
+for( i in 31:33){
+print(ggplot(mat_pass3,aes(factor(mat_pass3[,i]), y =(..count../sum(..count..))*100,fill=factor(mat_pass3[,i])))+ geom_bar()+xlab(names(mat_pass3[i]))+xlab(attribute[i])+ ylab("Pecentage")+labs(subtitle = "Math"))
+}
+### students scored in G1 16,18,19 and in G2 18,19. maximum absences was 6 
+```
+
+```{r}
+for( i in c(3,7,8,13,14,24:30:32)){
+print(ggplot(mat,aes(x=(mat[,i])))+ geom_boxplot()+xlab(attribute[i])+labs(subtitle = "Math"))+facet_wrap(~G3)
+}
+
+
+
+```
+
+```{r fig.height=30, fig.width=50}
+library(corrplot)
+num<-sapply(mat, is.numeric)
+numeric<-mat[,num]
+cor_numeric<-cor(numeric, method = "pearson")
+corrplot.mixed(cor_numeric,upper ="number",lower="color")   ### library(corrplot)
+### There are high positive correlations between G1, G2 and G3.
+```
+
+```{r fig.height=50, fig.width=50}
+mat_num<-sapply(mat, as.integer)
+cor_mat<-cor(mat_num, method = "spearman")
+corrplot.mixed(cor_mat,upper ="number",lower="color")   ### library(corrplot)
+### There are high positive correlations between G1, G2 and G3.
+```
