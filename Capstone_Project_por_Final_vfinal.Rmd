@@ -1,0 +1,153 @@
+
+
+---
+title: "Student Performance prediction-Multiple Linear Regression- porh Dataset"
+Github link: https://github.com/EnaAli/CIND-820-Student-Performance.git
+---
+Link to the dataset: https://archive.ics.uci.edu/ml/datasets/student+performance
+
+student-por.csv (porh course) 
+
+```{r}
+library(readr)
+library(tidyverse)
+# install.packages('caTools')
+library(caTools)
+# install.packages("Metrics")
+library(Metrics)
+library(performance)
+library(MASS)
+library(psych)
+library(caret)
+
+```
+
+
+```{r}
+#porh dataset
+por<- read.table("student-por.csv", header =TRUE, sep = ";",stringsAsFactors = T)
+### Subsetting numeric attributes.
+
+summary(por)
+numeric<- sapply(por, is.numeric) 
+por.num<-por[,numeric]
+####  data to predict G3
+por3<-por.num[,-c(14,15)]
+str(por3)
+#### data to predict G1
+por1<-por.num[,-c(16,15)]
+str(por1)
+```
+
+```{r}
+#create summary table
+describe(por,quant=c(0,.25,.50,.75,1),interp=FALSE,ranges=FALSE,check=TRUE,skew=FALSE ,omit=TRUE) #library(psych)
+
+
+```
+
+```{r}
+#############                     K-fold cross-validation
+
+# defining training control as cross-validation and value of K equal to 5
+train_control <- trainControl(method = "cv", number = 5)   #library(caret)
+```
+
+
+```{r}
+##### Building a model to predict G3
+# setting seed to generate a reproducible random sampling
+set.seed(123)
+# training the model by assigning G1 as dependent variable and rest column as independent variable
+model3 <- train(G3 ~., data = por3, method = "lm", trControl = train_control,preProcess =  "scale")
+# printing model performance metrics
+summary(model3)
+model3$resample #F=4.28  # p=4.22
+model3
+```
+
+
+```{r}
+##### Building a model to predict G1
+# setting seed to generate a reproducible random sampling
+set.seed(123)
+
+# training the model by assigning G1 as dependent variable and rest column as independent variable
+model1 <- train(G1 ~., data = por1, method = "lm", trControl = train_control,preProcess =  "scale")
+ 
+# printing model performance metrics
+summary(model1)
+print(model1)
+model1$resample
+model1
+```
+
+
+```{r}
+###Apply Forward Selection and Backward Elimination to find the important attributes.
+#### Multiple linear Regression models to predict G3
+Full3<-lm(G3~.,por3)
+Null3<-lm(G3~1,por3)
+stepF3<- stepAIC(Null3, scope=list(lower=Null3, upper=Full3),direction= "forward", trace=F) ##library(MASS)
+stepB3 <- stepAIC(Full3, direction= "backward", trace=F)                                    
+
+summary(Full3)
+summary(stepF3)
+
+# compare_performance(Full3,stepF3,stepB3) # library(performance)
+
+compare_performance(Full3,Null3,stepF3,stepB3)
+### The Forward Selection and Backward Elimination give the same model(lm(formula = G3 ~failures + Medu + goout + freetime, data = npor3)) with AIC=2264 compared to 2273 fo r the full model since the lower value of AIC is better model, the same values were for  data. with rmse for the full model 4.14 compared to 4.19 when using failures,  Medu,goout and  freetime features 
+```
+```{r}
+##### Building a model to predict G3
+# setting seed to generate a reproducible random sampling
+set.seed(123)
+# training the model by assigning G1 as dependent variable and rest column as independent variable
+SF.model3 <- train(G3 ~ failures + Medu + goout + freetime, data = por3, method = "lm", trControl = train_control,preProcess =  "scale")
+
+# printing model performance metrics
+print("G3 ~ failures + Medu + goout + freetime")
+summary(SF.model3)
+SF.model3$resample
+print(SF.model3)
+print(model3)
+### 
+```
+
+
+
+```{r}
+# Apply Forward Selection and Backward Elimination to find the important attributes.
+#### Multiple linear Regression models to predict G1
+Full1<-lm(G1~.,por1)
+Null1<-lm(G1~1,por1)
+StepF1<- stepAIC(Null1, scope=list(lower=Null1, upper=Full1),direction= "forward", trace=F) ##library(MASS)
+StepB1 <- stepAIC(Full1, direction= "backward", trace=F)                                    ##library(MASS)
+# 
+# summary(Full1)
+  summary(StepF1)
+
+# compare_performance(Full1,StepF1 ,StepB1) # library(performance)
+compare_performance(Full1,Null1,StepF1 ,StepB1)
+
+```
+
+```{r}
+##### Building a model to predict G3
+# setting seed to generate a reproducible random sampling
+set.seed(1)
+# training the model by assigning G1 as dependent variable and rest column as independent variable
+SF.model1 <- train( G1 ~ failures + Medu + goout + studytime + freetime, data = por1, method = "lm", trControl = train_control,preProcess =  "scale")
+
+# printing model performance metrics
+print((" G1 ~ failures + Medu + goout + studytime + freetime"))
+summary(SF.model1)
+SF.model1$resample 
+SF.model1
+print(SF.model1)
+print(model1)
+```
+
+
+
