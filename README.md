@@ -1,21 +1,13 @@
 # CIND-820-Predicting-Student-Performance
-Prediction of students' performance has been a big concern for educators as it is an important measure of ‎the quality of education. In addition, it can be helpful to enable educators to interfere in early learning ‎stages and provide additional support to low-performance.‎
+Predicting students' performance is crucial for educators, serving as a key indicator of education quality and enabling timely intervention and support for struggling students. In this Capstone project, we focused on forecasting students' performance in Math and Portuguese Language courses. Using the supervised learning algorithm of regression and implementing Multiple Linear Regression models in R programming, we aimed to predict students' final grades (G3) and first-period grades (G1). 
+The models were evaluated using the root mean square error (RMSE) and were built through a train and test cross-validation approach.
 
-In this Capstone project,  we are predicting the student performance at two Portuguese high ‎schools in two courses: Math and Portuguese Language using a supervised learning ‎algorithm, namely, regression. We used R programming to build  Multiple Linear Regression ‎models to predict the final grade G3 and first-period grade G1.  We applied the train and ‎test cross-validation method and measured the performance of the models using RMSE.‎
-
-The overall project methodology
-
+The overall project methodology:
 •	Data Selection
-
 •	Data Preparation ‎
-
 •	Exploratory Data Analysis
-
 •	Modelling ‎
-
 •	Evaluation
-
 •	Feature selection
 
-
-The dataset can be obtained UCI Machine Learning Repository: Student Performance Data Set
+The dataset for this project is available from the UCI Machine Learning Repository, Student Performance Data Set.
